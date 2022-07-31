@@ -29,5 +29,4 @@ app.include_router(video_router)
 app.include_router(user_router)
 
 print("Create user authorization middleware and create custom media directory!")
-print("May be create cycle for write video if file is large(write_video function)")
 print("создать миддлвейр для глобального захвата ошибки 404")

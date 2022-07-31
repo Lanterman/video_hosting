@@ -7,6 +7,7 @@ from .models import Video
 from .schemas import CreateVideo, GetVideoList
 from .services import save_video
 
+
 video_router = APIRouter(prefix="/video", tags=["video"])
 
 
@@ -16,7 +17,13 @@ async def get_video_list():
     return list_video
 
 
-@video_router.get("/watch/{video_id}")
+@video_router.post("/create_video", response_model=CreateVideo, status_code=201, description="Download video file")
+async def create_video(name: str = Form(), description: str = Form(), file: UploadFile = File()):
+    user = await User.objects.first()
+    return await save_video(name=name, description=description, file=file, user=user)
+
+
+@video_router.get("/watch/{video_id}", description="Watch streaming video")
 async def get_video(video_id: int):
     video = await http404_error_handler(class_model=Video, attribute=video_id, video=True)
     open_video = open(video.path_to_file, "rb")
@@ -24,13 +31,18 @@ async def get_video(video_id: int):
     return StreamingResponse(open_video, media_type=media_type)
 
 
-@video_router.post("/create_video", response_model=CreateVideo, status_code=201, description="Download mp4 file")
-async def create_video(name: str = Form(), description: str = Form(), file: UploadFile = File()):
+@video_router.post("/watch/{video_id}/set_like", description="Set or delete like from video", status_code=201)
+async def set_like(video_id: int):
+    video = await Video.objects.select_related("like_users").get(id=video_id)
     user = await User.objects.first()
-    return await save_video(name=name, description=description, file=file, user=user)
+    if user in video.like_users:
+        await video.like_users.remove(user)
+    else:
+        await video.like_users.add(user)
+    return video.like_users
 
 
-@video_router.delete("/delete_video/{video_id}")
+@video_router.delete("/watch/{video_id}/delete_video", description="Delete video")
 async def delete_video(video_id: int):
     video = await http404_error_handler(class_model=Video, attribute=video_id, video=True)
     return {"status": "Successful!", "deleted_rows": await video.delete()}
