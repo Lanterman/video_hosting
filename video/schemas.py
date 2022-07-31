@@ -18,7 +18,3 @@ class GetVideoList(Video):
 
 class CreateVideo(GetVideoList):
     pass
-
-
-class GetUser(User):
-    video_set: list[Video]

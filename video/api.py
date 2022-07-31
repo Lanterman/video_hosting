@@ -1,11 +1,10 @@
-import ormar
-
-from fastapi import APIRouter, Form, File, UploadFile, HTTPException, status
+from fastapi import APIRouter, Form, File, UploadFile
 from fastapi.responses import StreamingResponse
 
+from config.utils import http404_error_handler
 from user.models import User
 from .models import Video
-from .schemas import CreateVideo, GetVideoList, GetUser
+from .schemas import CreateVideo, GetVideoList
 from .services import save_video
 
 video_router = APIRouter(prefix="/video", tags=["video"])
@@ -17,21 +16,9 @@ async def get_video_list():
     return list_video
 
 
-@video_router.get("/channel/{username}", response_model=GetUser, description="User video list")
-async def get_user_video(username: str):
-    try:
-        user = await User.objects.select_related("video_set").get(username=username)
-    except ormar.NoMatch:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found!")
-    return user
-
-
 @video_router.get("/watch/{video_id}")
 async def get_video(video_id: int):
-    try:
-        video = await Video.objects.get(id=video_id)
-    except ormar.NoMatch:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found!")
+    video = await http404_error_handler(class_model=Video, attribute=video_id, video=True)
     open_video = open(video.path_to_file, "rb")
     media_type = f"video/{video.path_to_file[-3:]}"
     return StreamingResponse(open_video, media_type=media_type)
@@ -45,8 +32,5 @@ async def create_video(name: str = Form(), description: str = Form(), file: Uplo
 
 @video_router.delete("/delete_video/{video_id}")
 async def delete_video(video_id: int):
-    try:
-        video = await Video.objects.get(id=video_id)
-    except ormar.NoMatch:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found!")
+    video = await http404_error_handler(class_model=Video, attribute=video_id, video=True)
     return {"status": "Successful!", "deleted_rows": await video.delete()}
