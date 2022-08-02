@@ -5,7 +5,7 @@ from config.utils import http404_error_handler
 from user.models import User
 from .models import Video
 from .schemas import CreateVideo, GetVideoList
-from .services import save_video
+from .services import save_video, set_like
 
 
 video_router = APIRouter(prefix="/video", tags=["video"])
@@ -32,14 +32,8 @@ async def get_video(video_id: int):
 
 
 @video_router.post("/watch/{video_id}/set_like", description="Set or delete like from video", status_code=201)
-async def set_like(video_id: int):
-    video = await Video.objects.select_related("like_users").get(id=video_id)
-    user = await User.objects.first()
-    if user in video.like_users:
-        await video.like_users.remove(user)
-    else:
-        await video.like_users.add(user)
-    return video.like_users
+async def set_like_json(video_id: int):
+    return await set_like(video_id)
 
 
 @video_router.delete("/watch/{video_id}/delete_video", description="Delete video")

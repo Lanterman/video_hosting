@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from config.db import metadata, database, engine
 from user.api import user_router
 from video.api import video_router
-
+from video.html_api import html_router
 
 app = FastAPI()
 
@@ -27,6 +27,7 @@ async def shutdown() -> None:
 
 app.include_router(video_router)
 app.include_router(user_router)
+app.include_router(html_router)
 
 print("Create user authorization middleware and create custom media directory!")
 print("создать миддлвейр для глобального захвата ошибки 404")

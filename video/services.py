@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from fastapi import UploadFile, HTTPException, status
 
+from config.utils import http404_error_handler
 from user.models import User
 from .models import Video
 
@@ -26,3 +27,13 @@ async def write_video(file_name: str, file: UploadFile):
     async with aiofiles.open(file_name, "wb") as buffer:
         data = await file.read()
         await buffer.write(data)
+
+
+async def set_like(video_id: int):
+    video = await http404_error_handler(class_model=Video, attribute=video_id, set_like=True)
+    user = await User.objects.first()
+    if user in video.like_users:
+        await video.like_users.remove(user)
+    else:
+        await video.like_users.add(user)
+    return await video.like_users.count()

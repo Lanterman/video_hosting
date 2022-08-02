@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ path }}</title>
+</head>
+<body>
+    <h1>"http://127.0.0.1:8000/video/watch/{{path}}"</h1>
+    <input type="hidden" value="{{path}}" id="title">
+    <video autoplay width="800" height="500">
+        <source src="http://127.0.0.1:8000/video/watch/{{path}}">
+    </video>
+    <p id="count_likes">Count likes: {{count_likes}}</p>
+
+
+    <button onclick="setLike(event)">Send</button>
+
+        <script>
+            var ws = new WebSocket("ws://localhost:8000/html/ws");
+            ws.onmessage = function(event) {
+                document.querySelector("#count_likes").innerHTML = `Count likes: ${event.data}`
+            };
+            function setLike(event) {
+                let title = document.querySelector("#title");
+                ws.send(title.value);
+                event.preventDefault();
+            };
+        </script>
+</body>
+</html>
