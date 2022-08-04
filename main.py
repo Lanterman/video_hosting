@@ -29,5 +29,7 @@ app.include_router(video_router)
 app.include_router(user_router)
 app.include_router(html_router)
 
+print("Генерацию токенов формата UUID, Tokens.token - формат UUID")
+
 print("Create user authorization middleware and create custom media directory!")
 print("создать миддлвейр для глобального захвата ошибки 404")

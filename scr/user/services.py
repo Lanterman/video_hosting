@@ -28,20 +28,20 @@ def validate_password(password: str, hashed_password: str):
 
 async def get_user_by_email(email: str):
     """ Возвращает информацию о пользователе """
-    query = await Users.objects.all(email=email)
+    query = await Users.objects.first(email=email)
     return query
 
 
 async def get_user_by_token(token: str):
     """ Возвращает информацию о владельце указанного токена """
-    query = await Tokens.objects.select_related("user_id").all(token=token, expires=datetime.now())
-    return await query
+    query = await Tokens.objects.select_related("user_id").get(token=token)
+    return query
 
 
 async def create_user_token(user_id: int):
     """ Создает токен для пользователя с указанным user_id """
-    query = await Tokens.objects.create(expires=datetime.now() + timedelta(weeks=2), user_id=user_id, token="76d2a3c3-83b6-487d-aba2-adffd4323798")
-    return query.dict()
+    query = await Tokens.objects.create(expires=datetime.now() + timedelta(weeks=2), user_id=user_id, token="139ed287-934c-4339-9fa7-42b41444c480")
+    return query
 
 
 async def create_user(user: UserCreate):
@@ -51,6 +51,6 @@ async def create_user(user: UserCreate):
     user_id = await Users.objects.create(username=user.username, email=user.email, phone=user.phone,
                                          hashed_password=f"{salt}${hashed_password}")
     token = await create_user_token(user_id)
-    token_dict = {"token": token["token"], "expires": token["expires"]}
+    token_dict = {"token": token.token, "expires": token.expires}
 
     return {**user.dict(), "id": user_id, "is_activate": True, "token": token_dict}

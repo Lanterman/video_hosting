@@ -1,7 +1,9 @@
 import datetime
 
 from typing import Optional
-from pydantic import UUID4, BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, validator
+from pydantic.fields import Field
+from pydantic.types import UUID4
 
 from scr.video.models import Video
 
@@ -12,7 +14,7 @@ class UserBase(BaseModel):
     email: EmailStr
 
 
-class   GetUserBase(UserBase):
+class GetUserBase(UserBase):
     video_set: list[Video]
 
 
@@ -21,6 +23,7 @@ class UserCreate(UserBase):
 
 
 class TokenBase(BaseModel):
+    token: UUID4 = Field(..., alias="access_token")
     expires: datetime.datetime
     token_type: Optional[str] = "Bearer"
 
