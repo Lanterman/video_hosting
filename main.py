@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 
 from config.db import metadata, database, engine
-from user.api import user_router
-from video.api import video_router
-from video.html_api import html_router
+from scr.user.api import user_router
+from scr.video.api import video_router
+from scr.video.html_api import html_router
 
 app = FastAPI()
 

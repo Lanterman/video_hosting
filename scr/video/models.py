@@ -4,7 +4,7 @@ import datetime
 from typing import Optional
 
 from config.utils import MainMeta
-from user.models import User
+from scr.user.models import Users
 
 
 class Video(ormar.Model):
@@ -16,5 +16,5 @@ class Video(ormar.Model):
     description: str = ormar.String(max_length=500)
     path_to_file: str = ormar.String(max_length=1000, unique=True)
     date_of_creation: datetime.datetime = ormar.DateTime(default=datetime.datetime.now)
-    user: Optional[User] = ormar.ForeignKey(to=User, related_name="video_set")
-    like_users: Optional[list[User]] = ormar.ManyToMany(to=User, related_name="user_likes")
+    user: Optional[Users] = ormar.ForeignKey(to=Users, related_name="video_set")
+    like_users: Optional[list[Users]] = ormar.ManyToMany(to=Users, related_name="user_likes")

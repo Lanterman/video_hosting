@@ -2,6 +2,8 @@ import databases
 import sqlalchemy
 
 
+DATABASE_URL = "sqlite:///video_hosting.db"
+
 metadata = sqlalchemy.MetaData()
-engine = sqlalchemy.create_engine("sqlite:///video_hosting.db")
-database = databases.Database("sqlite:///video_hosting.db")
+engine = sqlalchemy.create_engine(DATABASE_URL)
+database = databases.Database(DATABASE_URL)

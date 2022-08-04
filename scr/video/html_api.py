@@ -3,8 +3,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from config.utils import http404_error_handler
-from video.services import set_like
-from video.models import Video
+from scr.video.services import set_like
+from scr.video.models import Video
 
 html_router = APIRouter(prefix="/html", tags=["html"])
 templates = Jinja2Templates(directory="templates")

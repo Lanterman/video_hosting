@@ -2,7 +2,7 @@ from fastapi import APIRouter, Form, File, UploadFile
 from fastapi.responses import StreamingResponse
 
 from config.utils import http404_error_handler
-from user.models import User
+from scr.user.models import Users
 from .models import Video
 from .schemas import CreateVideo, GetVideoList
 from .services import save_video, set_like
@@ -19,7 +19,7 @@ async def get_video_list():
 
 @video_router.post("/create_video", response_model=CreateVideo, status_code=201, description="Download video file")
 async def create_video(name: str = Form(), description: str = Form(), file: UploadFile = File()):
-    user = await User.objects.first()
+    user = await Users.objects.first()
     return await save_video(name=name, description=description, file=file, user=user)
 
 

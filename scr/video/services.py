@@ -4,14 +4,14 @@ from uuid import uuid4
 from fastapi import UploadFile, HTTPException, status
 
 from config.utils import http404_error_handler
-from user.models import User
+from scr.user.models import Users
 from .models import Video
 
 
 CONTENT_TYPES = ["video/mp4", "video/ogg", "video/webm"]
 
 
-async def save_video(name: str, description: str, file: UploadFile, user: User):
+async def save_video(name: str, description: str, file: UploadFile, user: Users):
     file_name = f'uploaded_files/{user.id}/{uuid4()}.mp4'
     if file.content_type in CONTENT_TYPES:
         await write_video(file_name=file_name, file=file)
@@ -31,7 +31,7 @@ async def write_video(file_name: str, file: UploadFile):
 
 async def set_like(video_id: int):
     video = await http404_error_handler(class_model=Video, attribute=video_id, set_like=True)
-    user = await User.objects.first()
+    user = await Users.objects.first()
     if user in video.like_users:
         await video.like_users.remove(user)
     else:

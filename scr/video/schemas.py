@@ -2,7 +2,7 @@ import datetime
 
 from pydantic import BaseModel
 
-from user.schemas import User
+from scr.user.schemas import UserBase
 
 
 class Video(BaseModel):
@@ -13,7 +13,7 @@ class Video(BaseModel):
 
 
 class GetVideoList(Video):
-    user: User
+    user: UserBase
 
 
 class CreateVideo(GetVideoList):
