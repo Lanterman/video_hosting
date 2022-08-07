@@ -1,10 +1,14 @@
 import hashlib
 import random
+import uuid
 import string
 from datetime import datetime, timedelta
 
+from fastapi import HTTPException
+from pydantic.networks import EmailStr
+
 from scr.user.models import Users, Tokens
-from scr.user.schemas import UserCreate
+from scr.user.schemas import UserCreate, ResetPassword
 
 
 def get_random_string(length=12):
@@ -26,21 +30,22 @@ def validate_password(password: str, hashed_password: str):
     return hash_password(password, salt) == hashed
 
 
-async def get_user_by_email(email: str):
+async def get_user_by_username(username: str):
     """ Возвращает информацию о пользователе """
-    query = await Users.objects.first(email=email)
-    return query
+    query = await Users.objects.all(username=username)
+    return query[0] if query else query
 
 
 async def get_user_by_token(token: str):
     """ Возвращает информацию о владельце указанного токена """
-    query = await Tokens.objects.select_related("user_id").get(token=token)
-    return query
+    query = await Tokens.objects.select_related("user_id").all(token=token, expires__gt=datetime.now())
+    return query[0] if query else query
 
 
 async def create_user_token(user_id: int):
     """ Создает токен для пользователя с указанным user_id """
-    query = await Tokens.objects.create(expires=datetime.now() + timedelta(weeks=2), user_id=user_id, token="139ed287-934c-4339-9fa7-42b41444c480")
+    my_uuid = uuid.uuid4()
+    query = await Tokens.objects.create(expires=datetime.now() + timedelta(weeks=2), user_id=user_id, token=my_uuid)
     return query
 
 
@@ -54,3 +59,26 @@ async def create_user(user: UserCreate):
     token_dict = {"token": token.token, "expires": token.expires}
 
     return {**user.dict(), "id": user_id, "is_activate": True, "token": token_dict}
+
+
+async def update_user_info(username: str, phone: int, email: EmailStr, user: Users):
+    """Обновление данных пользователя"""
+    await user.update(username=username, phone=phone, email=email)
+    return user
+
+
+async def reset_password(password1: str, password2: str, user: Users) -> None:
+    """Сброс пароля"""
+    if password1 != password2:
+        raise HTTPException(status_code=406, detail="Passwords don't match!")
+    ResetPassword(password1=password1, password2=password2)
+    salt = get_random_string()
+    hashed_password = hash_password(password1, salt)
+    await user.update(hashed_password=hashed_password)
+
+
+async def delete_user(user: Users):
+    """Удалить пользователя"""
+    print(user)
+    user = await Users.objects.delete(id=user.id)
+    return user
