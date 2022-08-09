@@ -4,20 +4,21 @@ import uuid
 import string
 from datetime import datetime, timedelta
 
-from fastapi import HTTPException
 from pydantic.networks import EmailStr
 
 from scr.user.models import Users, Tokens
-from scr.user.schemas import UserCreate, ResetPassword
+from scr.user.schemas import UserCreate
 
 
 def get_random_string(length=12):
-    """ Генерирует случайную строку, использующуюся как соль """
+    """Generate random string to use as salt"""
+
     return "".join(random.choice(string.ascii_letters) for _ in range(length))
 
 
 def hash_password(password: str, salt: str = None):
-    """ Хеширует пароль с солью """
+    """Hash password with salt"""
+
     if salt is None:
         salt = get_random_string()
     enc = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
@@ -25,36 +26,50 @@ def hash_password(password: str, salt: str = None):
 
 
 def validate_password(password: str, hashed_password: str):
-    """ Проверяет, что хеш пароля совпадает с хешем из БД """
+    """Check if password matches hash from database"""
+
     salt, hashed = hashed_password.split("$")
     return hash_password(password, salt) == hashed
 
 
 async def get_user_by_username(username: str):
-    """ Возвращает информацию о пользователе """
+    """Return user information by the username"""
+
     query = await Users.objects.all(username=username)
     return query[0] if query else query
 
 
+async def get_user_by_email(email: EmailStr):
+    """Return user information by the username"""
+
+    query = await Users.objects.all(email=email)
+    return query[0] if query else query
+
+
 async def get_user_by_token(token: str):
-    """ Возвращает информацию о владельце указанного токена """
+    """Return information about owner of specified token"""
+
     query = await Tokens.objects.select_related("user_id").all(token=token, expires__gt=datetime.now())
     return query[0] if query else query
 
 
 async def create_user_token(user_id: int):
-    """ Создает токен для пользователя с указанным user_id """
+    """Create token for user of specified user_id"""
+
     my_uuid = uuid.uuid4()
+    await Tokens.objects.delete(user_id=user_id)
     query = await Tokens.objects.create(expires=datetime.now() + timedelta(weeks=2), user_id=user_id, token=my_uuid)
     return query
 
 
 async def create_user(user: UserCreate):
-    """ Создает нового пользователя в БД """
+    """Create new user in database"""
+
     salt = get_random_string()
     hashed_password = hash_password(user.password, salt)
-    user_id = await Users.objects.create(username=user.username, email=user.email, phone=user.phone,
-                                         hashed_password=f"{salt}${hashed_password}")
+    user_id = await Users.objects.create(
+        username=user.username, email=user.email, phone=user.phone, hashed_password=f"{salt}${hashed_password}"
+    )
     token = await create_user_token(user_id)
     token_dict = {"token": token.token, "expires": token.expires}
 
@@ -62,23 +77,22 @@ async def create_user(user: UserCreate):
 
 
 async def update_user_info(username: str, phone: int, email: EmailStr, user: Users):
-    """Обновление данных пользователя"""
+    """Update user information"""
+
     await user.update(username=username, phone=phone, email=email)
     return user
 
 
-async def reset_password(password1: str, password2: str, user: Users) -> None:
-    """Сброс пароля"""
-    if password1 != password2:
-        raise HTTPException(status_code=406, detail="Passwords don't match!")
-    ResetPassword(password1=password1, password2=password2)
+async def reset_password(new_password: str, user: Users) -> None:
+    """Reset user password"""
+
     salt = get_random_string()
-    hashed_password = hash_password(password1, salt)
-    await user.update(hashed_password=hashed_password)
+    hashed_password = hash_password(new_password, salt)
+    await user.update(hashed_password=f"{salt}${hashed_password}")
 
 
 async def delete_user(user: Users):
-    """Удалить пользователя"""
-    print(user)
-    user = await Users.objects.delete(id=user.id)
+    """Delete user"""
+
+    await user.delete()
     return user
