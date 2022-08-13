@@ -98,7 +98,7 @@ class TokenBase(BaseModel):
         allow_population_by_field_name = True
 
 
-class User(UserBase):
+class UserSchema(UserBase):
     """User creation schema - response model"""
 
     token: TokenBase = {}

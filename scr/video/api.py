@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Form, File, UploadFile
+from fastapi import APIRouter, Form, File, UploadFile, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
 
 from config.utils import http404_error_handler
+from config.dependecies import get_current_user
 from scr.user.models import Users
 from .models import Video
 from .schemas import CreateVideo, GetVideoList
-from .services import save_video, set_like
+from scr.video import services
 
 
 video_router = APIRouter(prefix="/video", tags=["video"])
@@ -13,30 +14,43 @@ video_router = APIRouter(prefix="/video", tags=["video"])
 
 @video_router.get("/", response_model=list[GetVideoList], description="Video list output")
 async def get_video_list():
-    list_video = await Video.objects.select_related("user").all()
+    """Get all video"""
+
+    list_video = await services.get_all_video()
     return list_video
 
 
 @video_router.post("/create_video", response_model=CreateVideo, status_code=201, description="Download video file")
-async def create_video(name: str = Form(), description: str = Form(), file: UploadFile = File()):
-    user = await Users.objects.first()
-    return await save_video(name=name, description=description, file=file, user=user)
+async def create_video(
+        back_task: BackgroundTasks, name: str = Form(), description: str = Form(), file: UploadFile = File(),
+        current_user: Users = Depends(get_current_user)
+):
+    """Create video"""
+
+    return await services.save_video(back_task, name=name, description=description, file=file, user=current_user)
 
 
 @video_router.get("/watch/{video_id}", description="Watch streaming video")
 async def get_video(video_id: int):
-    video = await http404_error_handler(class_model=Video, attribute=video_id, video=True)
+    """Streaming video"""
+
+    video = await http404_error_handler(class_model=Video, attribute=video_id)
     open_video = open(video.path_to_file, "rb")
     media_type = f"video/{video.path_to_file[-3:]}"
     return StreamingResponse(open_video, media_type=media_type)
 
 
 @video_router.post("/watch/{video_id}/set_like", description="Set or delete like from video", status_code=201)
-async def set_like_json(video_id: int):
-    return await set_like(video_id)
+async def set_like(video_id: int, current_user: Users = Depends(get_current_user)):
+    """Set or delete like"""
+
+    return await services.set_like(video_id, current_user)
 
 
 @video_router.delete("/watch/{video_id}/delete_video", description="Delete video")
-async def delete_video(video_id: int):
-    video = await http404_error_handler(class_model=Video, attribute=video_id, video=True)
-    return {"status": "Successful!", "deleted_rows": await video.delete()}
+async def delete_video(back_task: BackgroundTasks, video_id: int, current_user: Users = Depends(get_current_user)):
+    """Delete video"""
+
+    video = await http404_error_handler(class_model=Video, attribute=video_id)
+    await services.delete_video_from_database(video=video, back_task=back_task, user_id=current_user.id)
+    return {"status": "Successful!"}

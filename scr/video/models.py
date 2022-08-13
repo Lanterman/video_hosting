@@ -16,5 +16,5 @@ class Video(ormar.Model):
     description: str = ormar.String(max_length=500)
     path_to_file: str = ormar.String(max_length=1000, unique=True)
     date_of_creation: datetime.datetime = ormar.DateTime(default=datetime.datetime.now)
-    user: Optional[Users] = ormar.ForeignKey(to=Users, related_name="video_set")
+    user: Optional[Users] = ormar.ForeignKey(to=Users, related_name="video_set", ondelete="CASCADE")
     like_users: Optional[list[Users]] = ormar.ManyToMany(to=Users, related_name="user_likes")

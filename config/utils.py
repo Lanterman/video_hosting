@@ -1,8 +1,13 @@
 import ormar
 
+from pathlib import Path
+
 from fastapi import HTTPException, status
 
 from .db import metadata, database
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class MainMeta(ormar.ModelMeta):
@@ -10,14 +15,12 @@ class MainMeta(ormar.ModelMeta):
     database = database
 
 
-async def http404_error_handler(class_model, attribute, video=False, set_like=False):
+async def http404_error_handler(class_model, attribute, set_like=False):
     try:
-        if video:
+        if not set_like:
             obj = await class_model.objects.get(id=attribute)
-        elif set_like:
-            obj = await class_model.objects.select_related("like_users").get(id=attribute)
         else:
-            obj = await class_model.objects.select_related("video_set").get(username=attribute)
+            obj = await class_model.objects.select_related("like_users").get(id=attribute)
     except ormar.NoMatch:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found!")
     return obj

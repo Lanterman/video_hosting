@@ -30,6 +30,4 @@ app.include_router(user_router)
 app.include_router(html_router)
 
 
-print("Create custom media directory!")
-print("создать миддлвейр для глобального захвата ошибки 404")
 print("вывод сразу всех ошибок валидации")
