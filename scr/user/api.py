@@ -3,7 +3,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from scr.user import services
 from .models import Users
-from .schemas import UserCreate, TokenBase, UserBase, UserUpdate, GetUserVideo, ResetPassword, UserSchema
+from .schemas import UserCreate, TokenBase, UserBase, UserUpdate, GetUserVideo, ResetPassword, UserSchema, \
+    Subscriber
 from config.dependecies import get_current_user
 
 
@@ -98,3 +99,20 @@ async def delete_user(background_task: BackgroundTasks, current_user: Users = De
 
     result = await services.delete_user(user=current_user, background_task=background_task)
     return {"Detail": "Successful!", "user": result}
+
+
+@user_router.post(
+    "/{username}/follow", description="Follow or unfollow user", status_code=201, response_model=list[Subscriber]
+)
+async def follow_user(username: str, current_user: Users = Depends(get_current_user)):
+    """Follow or unfollow user"""
+
+    user = await services.get_user_by_username(username=username)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found!")
+
+    if user.id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Can't follow yourself!")
+
+    return await services.follow_or_unfollow(owner=user, subscriber=current_user)

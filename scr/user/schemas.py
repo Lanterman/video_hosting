@@ -20,10 +20,15 @@ class UserBase(BaseModel):
     email: EmailStr
 
 
+class SubscriberBase(BaseModel):
+    id: int
+
+
 class GetUserVideo(UserBase):
     """User video get schema - response model"""
 
     video_set: list[Video]
+    subscribers: list[SubscriberBase]
 
 
 class ResetPassword(BaseModel):
@@ -102,3 +107,10 @@ class UserSchema(UserBase):
     """User creation schema - response model"""
 
     token: TokenBase = {}
+
+
+class Subscriber(BaseModel):
+    """Base subscriber schema"""
+
+    owner: UserBase
+    subscriber: UserBase

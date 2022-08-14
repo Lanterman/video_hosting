@@ -11,17 +11,17 @@ from fastapi import BackgroundTasks
 from pydantic.networks import EmailStr
 
 from config.utils import BASE_DIR
-from scr.user.models import Users, Tokens
+from scr.user.models import Users, Tokens, Subscriber
 from scr.user.schemas import UserCreate
 
 
-def get_random_string(length=12):
+def get_random_string(length=12) -> str:
     """Generate random string to use as salt"""
 
     return "".join(random.choice(string.ascii_letters) for _ in range(length))
 
 
-def hash_password(password: str, salt: str = None):
+def hash_password(password: str, salt: str = None) -> hex:
     """Hash password with salt"""
 
     if salt is None:
@@ -30,42 +30,43 @@ def hash_password(password: str, salt: str = None):
     return enc.hex()
 
 
-def validate_password(password: str, hashed_password: str):
+def validate_password(password: str, hashed_password: str) -> bool:
     """Check if password matches hash from database"""
 
     salt, hashed = hashed_password.split("$")
     return hash_password(password, salt) == hashed
 
 
-async def get_user_and_his_video_by_username(username: str):
+async def get_user_and_his_video_by_username(username: str) -> Users or None:
     """Return user information and his video by the username"""
 
-    query = await Users.objects.select_related("video_set").all(username=username)
-    return query[0] if query else query
+    query = await Users.objects.select_related(["video_set", "subscribers"]).get_or_none(username=username)
+    print(query)
+    return query
 
 
-async def get_user_by_username(username: str):
+async def get_user_by_username(username: str) -> Users or None:
     """Return user information by the username"""
 
-    query = await Users.objects.all(username=username)
-    return query[0] if query else query
+    query = await Users.objects.get_or_none(username=username)
+    return query
 
 
-async def get_user_by_email(email: EmailStr):
+async def get_user_by_email(email: EmailStr) -> Users or None:
     """Return user information by the username"""
 
-    query = await Users.objects.all(email=email)
-    return query[0] if query else query
+    query = await Users.objects.get_or_none(email=email)
+    return query
 
 
-async def get_user_by_token(token: str):
+async def get_user_by_token(token: str) -> Users or None:
     """Return information about owner of specified token"""
 
-    query = await Tokens.objects.select_related("user_id").all(token=token, expires__gt=datetime.now())
-    return query[0] if query else query
+    query = await Tokens.objects.select_related("user_id").get_or_none(token=token, expires__gt=datetime.now())
+    return query
 
 
-async def create_user_token(user_id: int):
+async def create_user_token(user_id: int) -> Tokens:
     """Create token for user of specified user_id"""
 
     my_uuid = uuid.uuid4()
@@ -74,21 +75,21 @@ async def create_user_token(user_id: int):
     return query
 
 
-def create_user_directory(user_id):
+def create_user_directory(user_id) -> None:
     """Create custom directory for user video"""
 
     if str(user_id) not in os.listdir(path=f"{BASE_DIR}/uploaded_files"):
         os.mkdir(path=f"{BASE_DIR}/uploaded_files/{user_id}")
 
 
-def delete_user_directory(user_id):
+def delete_user_directory(user_id) -> None:
     """Delete custom directory for user video"""
 
     if str(user_id) in os.listdir(path=f"{BASE_DIR}/uploaded_files"):
         shutil.rmtree(path=f"{BASE_DIR}/uploaded_files/{user_id}")
 
 
-async def create_user(user: UserCreate, background_task: BackgroundTasks):
+async def create_user(user: UserCreate, background_task: BackgroundTasks) -> dict:
     """Create new user in database"""
 
     salt = get_random_string()
@@ -103,7 +104,7 @@ async def create_user(user: UserCreate, background_task: BackgroundTasks):
     return {**user.dict(), "id": new_user.id, "is_activate": True, "token": token_dict}
 
 
-async def update_user_info(username: str, phone: int, email: EmailStr, user: Users):
+async def update_user_info(username: str, phone: int, email: EmailStr, user: Users) -> Users:
     """Update user information"""
 
     await user.update(username=username, phone=phone, email=email)
@@ -118,9 +119,21 @@ async def reset_password(new_password: str, user: Users) -> None:
     await user.update(hashed_password=f"{salt}${hashed_password}")
 
 
-async def delete_user(user: Users, background_task: BackgroundTasks):
+async def delete_user(user: Users, background_task: BackgroundTasks) -> int:
     """Delete user"""
 
     await user.delete()
     background_task.add_task(delete_user_directory, user.id)
     return user.id
+
+
+async def follow_or_unfollow(owner: Users, subscriber: Users):
+    """Follow or unfollow user"""
+
+    query = await Subscriber.objects.get_or_none(owner=owner, subscriber=subscriber)
+    if query:
+        await query.delete()
+    else:
+        await Subscriber.objects.create(owner=owner, subscriber=subscriber)
+    subscribers = await Subscriber.objects.filter(owner=owner).select_related(["owner", "subscriber"]).all()
+    return subscribers

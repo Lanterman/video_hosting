@@ -30,4 +30,8 @@ app.include_router(user_router)
 app.include_router(html_router)
 
 
+print("дорабоать подписчиков, get_user_video - выводить поле подписчиков")
+print("пересмотреть video websocket, сделать вебсокеты для реализации подписчиков")
 print("вывод сразу всех ошибок валидации")
+
+AUTH_TOKEN = "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"
