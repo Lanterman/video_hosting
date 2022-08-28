@@ -20,7 +20,9 @@ async def get_user_video(username: str):
     if not user_videos:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found!")
 
-    return user_videos
+    subscribers = await services.get_user_subscribers(username)
+
+    return user_videos.dict() | {"subscribers": subscribers}
 
 
 @user_router.post("/sign-up", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
@@ -105,7 +107,7 @@ async def delete_user(background_task: BackgroundTasks, current_user: Users = De
     "/{username}/follow", description="Follow or unfollow user", status_code=201, response_model=list[Subscriber]
 )
 async def follow_user(username: str, current_user: Users = Depends(get_current_user)):
-    """Follow or unfollow user"""
+    """Follow or unfollow user - endpoint"""
 
     user = await services.get_user_by_username(username=username)
 

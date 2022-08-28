@@ -40,8 +40,14 @@ def validate_password(password: str, hashed_password: str) -> bool:
 async def get_user_and_his_video_by_username(username: str) -> Users or None:
     """Return user information and his video by the username"""
 
-    query = await Users.objects.select_related(["video_set", "subscribers"]).get_or_none(username=username)
-    print(query)
+    query = await Users.objects.select_related("video_set").get_or_none(username=username)
+    return query
+
+
+async def get_user_subscribers(username: str) -> list:
+    """Return user subscribers"""
+
+    query = await Subscriber.objects.filter(owner__username=username).select_related("subscriber").all()
     return query
 
 
@@ -53,7 +59,7 @@ async def get_user_by_username(username: str) -> Users or None:
 
 
 async def get_user_by_email(email: EmailStr) -> Users or None:
-    """Return user information by the username"""
+    """Return user information by the email"""
 
     query = await Users.objects.get_or_none(email=email)
     return query
@@ -127,7 +133,7 @@ async def delete_user(user: Users, background_task: BackgroundTasks) -> int:
     return user.id
 
 
-async def follow_or_unfollow(owner: Users, subscriber: Users):
+async def follow_or_unfollow(owner: Users, subscriber: Users) -> list:
     """Follow or unfollow user"""
 
     query = await Subscriber.objects.get_or_none(owner=owner, subscriber=subscriber)

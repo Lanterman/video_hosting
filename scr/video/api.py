@@ -40,7 +40,7 @@ async def get_video(video_id: int):
     return StreamingResponse(open_video, media_type=media_type)
 
 
-@video_router.post("/watch/{video_id}/set_like", description="Set or delete like from video", status_code=201)
+@video_router.get("/watch/{video_id}/set_like", description="Set or delete like from video", status_code=201)
 async def set_like(video_id: int, current_user: Users = Depends(get_current_user)):
     """Set or delete like"""
 

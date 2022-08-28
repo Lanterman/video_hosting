@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ path }}</title>
+</head>
+<body>
+    <h1>"http://127.0.0.1:8000/html/channel/{{user.username}}"</h1>
+
+    <input type="hidden" value="{{user.username}}" id="path">
+
+    <div>
+        <p id="subscribers">Subscribers: {{subscribers}}</p>
+        <button id="button" onclick="follow(event)">Send</button>
+    </div><br><br>
+
+    <div>
+        {% for video in user.video_set %}
+            <p>{{video.name}} - {{video.date_of_creation}}</p>
+        {% endfor %}
+    </div>
+
+    <script>
+        let ws = new WebSocket(`ws://${window.location.host}/html/ws/channel`);
+
+        ws.onmessage = function(event) {
+            if (event.data == "Not authorization!") {
+                document.getElementById("button").remove();
+            } else {
+                document.querySelector("#subscribers").innerHTML = `Subscribers: ${event.data}`;
+            };
+        };
+
+        function follow(event) {
+            let path = document.querySelector("#path");
+            ws.send(path.value);
+            event.preventDefault();
+        };
+    </script>
+</body>
+</html>

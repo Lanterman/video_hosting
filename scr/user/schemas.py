@@ -15,13 +15,16 @@ from scr.video.models import Video
 class UserBase(BaseModel):
     """Base user schema"""
 
+    id: int
     username: str
     phone: int
     email: EmailStr
 
 
 class SubscriberBase(BaseModel):
-    id: int
+    """Base subscriber"""
+
+    subscriber: UserBase
 
 
 class GetUserVideo(UserBase):

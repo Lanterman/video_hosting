@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, WebSocket, Depends
+from fastapi import Request, APIRouter, WebSocket, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -8,11 +8,11 @@ from scr.user.models import Users
 from scr.video.services import set_like
 from scr.video.models import Video
 
-html_router = APIRouter(prefix="/html", tags=["html"])
+html_video_router = APIRouter(prefix="/html", tags=["html"])
 templates = Jinja2Templates(directory="templates")
 
 
-@html_router.get("/watch/{video_id}", response_class=HTMLResponse, include_in_schema=False)
+@html_video_router.get("/watch/{video_id}", response_class=HTMLResponse, include_in_schema=False)
 async def set_like_html(request: Request, video_id: int):
     video = await http404_error_handler(class_model=Video, attribute=video_id)
     count_likes = await video.like_users.count()
@@ -20,10 +20,16 @@ async def set_like_html(request: Request, video_id: int):
     return templates.TemplateResponse("watch_video.html", context)
 
 
-@html_router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, current_user: Users = Depends(get_current_user)):
+@html_video_router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    while True:
-        data = await websocket.receive()
-        count_likes = await set_like(data["text"], current_user)
-        await websocket.send_text(f"{count_likes}")
+
+    try:
+        current_user: Users | None = await get_current_user()
+    except HTTPException:
+        await websocket.send_text("Not authorization")
+    else:
+        while True:
+            data = await websocket.receive()
+            count_likes = await set_like(data["text"], current_user)
+            await websocket.send_text(f"{count_likes}")
