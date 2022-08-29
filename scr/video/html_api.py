@@ -1,10 +1,12 @@
-from fastapi import Request, APIRouter, WebSocket, HTTPException
+from fastapi import Request, APIRouter, WebSocket, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from config.dependecies import get_current_user
 from config.utils import http404_error_handler
-from scr.user.models import Users
+
+from scr.user import models
+from scr.user import services
 from scr.video.services import set_like
 from scr.video.models import Video
 
@@ -13,10 +15,11 @@ templates = Jinja2Templates(directory="templates")
 
 
 @html_video_router.get("/watch/{video_id}", response_class=HTMLResponse, include_in_schema=False)
-async def set_like_html(request: Request, video_id: int):
+async def set_like_html(request: Request, video_id: int, current_user: models.Users = Depends(get_current_user)):
     video = await http404_error_handler(class_model=Video, attribute=video_id)
     count_likes = await video.like_users.count()
-    context = {"request": request, "path": video_id, "count_likes": count_likes}
+    context = {"request": request, "video_id": video_id, "count_likes": count_likes,
+               "current_user": current_user.username}
     return templates.TemplateResponse("watch_video.html", context)
 
 
@@ -24,12 +27,11 @@ async def set_like_html(request: Request, video_id: int):
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
-    try:
-        current_user: Users | None = await get_current_user()
-    except HTTPException:
-        await websocket.send_text("Not authorization")
-    else:
-        while True:
-            data = await websocket.receive()
-            count_likes = await set_like(data["text"], current_user)
-            await websocket.send_text(f"{count_likes}")
+    while True:
+        data = await websocket.receive_text()
+        data = data.split(", ")
+
+        current_user = await services.get_user_by_username(data[1])
+
+        count_likes = await set_like(int(data[0]), current_user)
+        await websocket.send_text(f"{count_likes}")

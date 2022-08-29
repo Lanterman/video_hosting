@@ -39,11 +39,12 @@ async def set_like(video_id: int, user: Users) -> int:
     """Set or delete user like from video"""
 
     video = await http404_error_handler(class_model=Video, attribute=video_id, set_like=True)
-    if user in video.like_users:
-        await video.like_users.remove(user)
+    like_users = video.like_users
+    if user in like_users:
+        await like_users.remove(user)
     else:
-        await video.like_users.add(user)
-    return await video.like_users.count()
+        await like_users.add(user)
+    return await like_users.count()
 
 
 def delete_video_from_user_directory(path: str, user_id: int) -> None:

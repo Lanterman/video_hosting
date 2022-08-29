@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ path }}</title>
+    <title>{{ video_id }}</title>
 </head>
 <body>
-    <h1>"http://127.0.0.1:8000/html/watch/{{path}}"</h1>
+    <h1>"http://127.0.0.1:8000/html/watch/{{video_id}}"</h1>
 
-    <input type="hidden" value="{{path}}" id="path">
+    <input type="hidden" value="{{video_id}}" id="video_id">
+    <input type="hidden" value="{{current_user}}" id="current_user">
 
     <video autoplay width="800" height="500">
-        <source src="http://127.0.0.1:8000/video/watch/{{path}}">
+        <source src="http://127.0.0.1:8000/video/watch/{{video_id}}">
     </video>
-
     <p id="count_likes">Count likes: {{count_likes}}</p>
     <button id="button" onclick="setLike(event)">Send</button>
 
@@ -28,8 +28,9 @@
         };
 
         function setLike(event) {
-            let path = document.querySelector("#path");
-            ws.send(path.value);
+            let video_id = document.getElementById("video_id");
+            let current_user = document.getElementById("current_user");
+            ws.send(`${video_id.value}, ${current_user.value}`);
             event.preventDefault();
         };
     </script>

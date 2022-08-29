@@ -2,16 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ path }}</title>
+    <title>{{ user.username }}</title>
 </head>
 <body>
     <h1>"http://127.0.0.1:8000/html/channel/{{user.username}}"</h1>
 
-    <input type="hidden" value="{{user.username}}" id="path">
+    <input type="hidden" value="{{user.username}}" id="owner">
+    <input type="hidden" value="{{current_user}}" id="current_user">
 
     <div>
         <p id="subscribers">Subscribers: {{subscribers}}</p>
-        <button id="button" onclick="follow(event)">Send</button>
+        {% if user.username != current_user %}
+            <button id="button" onclick="follow(event)">Send</button>
+        {% endif %}
     </div><br><br>
 
     <div>
@@ -24,16 +27,13 @@
         let ws = new WebSocket(`ws://${window.location.host}/html/ws/channel`);
 
         ws.onmessage = function(event) {
-            if (event.data == "Not authorization!") {
-                document.getElementById("button").remove();
-            } else {
-                document.querySelector("#subscribers").innerHTML = `Subscribers: ${event.data}`;
-            };
+            document.querySelector("#subscribers").innerHTML = `Subscribers: ${event.data}`;
         };
 
         function follow(event) {
-            let path = document.querySelector("#path");
-            ws.send(path.value);
+            let owner = document.getElementById("owner");
+            let current_user = document.getElementById("current_user");
+            ws.send(`${owner.value}, ${current_user.value}`);
             event.preventDefault();
         };
     </script>
