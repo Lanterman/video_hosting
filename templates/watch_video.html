@@ -13,8 +13,11 @@
     <video autoplay width="800" height="500">
         <source src="http://127.0.0.1:8000/video/watch/{{video_id}}">
     </video>
-    <p id="count_likes">Count likes: {{count_likes}}</p>
-    <button id="button" onclick="setLike(event)">Send</button>
+
+    <div>
+        <p id="count_likes">Count likes: {{count_likes}}</p>
+        <button id="button" onclick="setLike(event)">Send</button>
+    </div>
 
     <script>
         let ws = new WebSocket(`ws://${window.location.host}/html/ws`);

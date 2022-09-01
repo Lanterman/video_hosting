@@ -65,7 +65,7 @@ async def get_user_by_email(email: EmailStr) -> Users or None:
     return query
 
 
-async def get_user_by_token(token: str) -> Users or None:
+async def get_user_token(token: str) -> Users or None:
     """Return information about owner of specified token"""
 
     query = await Tokens.objects.select_related("user_id").get_or_none(token=token, expires__gt=datetime.now())
@@ -105,9 +105,8 @@ async def create_user(user: UserCreate, background_task: BackgroundTasks) -> dic
     )
     background_task.add_task(create_user_directory, new_user.id)
     token = await create_user_token(new_user)
-    token_dict = {"token": token.token, "expires": token.expires}
 
-    return {**user.dict(), "id": new_user.id, "is_activate": True, "token": token_dict}
+    return {**user.dict(), "id": new_user.id, "is_activate": True, "token": token.dict()}
 
 
 async def update_user_info(username: str, phone: int, email: EmailStr, user: Users) -> Users:
@@ -141,5 +140,5 @@ async def follow_or_unfollow(owner: Users, subscriber: Users) -> list:
         await query.delete()
     else:
         await Subscriber.objects.create(owner=owner, subscriber=subscriber)
-    subscribers = await Subscriber.objects.filter(owner=owner).select_related(["owner", "subscriber"]).all()
+    subscribers = await get_user_subscribers(username=owner.username)
     return subscribers

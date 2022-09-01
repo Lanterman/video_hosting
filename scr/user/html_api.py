@@ -3,8 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from config.dependecies import get_current_user
-from scr.user import services
-from scr.user.models import Users
+from scr.user import services, models
 
 
 html_user_router = APIRouter(prefix="/html", tags=["html"])
@@ -12,7 +11,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 @html_user_router.get("/channel/{username}", response_class=HTMLResponse, include_in_schema=False)
-async def set_like_html(request: Request, username: str, current_user: Users = Depends(get_current_user)):
+async def set_like_html(request: Request, username: str, current_user: models.Users = Depends(get_current_user)):
     user_videos = await services.get_user_and_his_video_by_username(username=username)
 
     if not user_videos:
@@ -33,13 +32,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
     while True:
         data = await websocket.receive_text()
-        data = data.split(", ")
+        owner_username, current_user_username = data.split(", ")
 
         if not owner:
-            owner = await services.get_user_by_username(username=data[0])
+            owner = await services.get_user_by_username(username=owner_username)
 
         if not current_user:
-            current_user = await services.get_user_by_username(username=data[1])
+            current_user = await services.get_user_by_username(username=current_user_username)
 
         subscribers = await services.follow_or_unfollow(owner=owner, subscriber=current_user)
         subscribers = str(len(subscribers))

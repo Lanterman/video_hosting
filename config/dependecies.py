@@ -7,7 +7,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/auth")
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    token = await services.get_user_by_token(token)
+    token = await services.get_user_token(token)
 
     if not token:
         raise HTTPException(

@@ -15,7 +15,6 @@ from scr.video.models import Video
 class UserBase(BaseModel):
     """Base user schema"""
 
-    id: int
     username: str
     phone: int
     email: EmailStr
@@ -109,6 +108,7 @@ class TokenBase(BaseModel):
 class UserSchema(UserBase):
     """User creation schema - response model"""
 
+    is_activate: bool
     token: TokenBase = {}
 
 

@@ -5,8 +5,7 @@ from fastapi.templating import Jinja2Templates
 from config.dependecies import get_current_user
 from config.utils import http404_error_handler
 
-from scr.user import models
-from scr.user import services
+from scr.user import models, services
 from scr.video.services import set_like
 from scr.video.models import Video
 
@@ -27,11 +26,14 @@ async def set_like_html(request: Request, video_id: int, current_user: models.Us
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
+    current_user = None
+
     while True:
         data = await websocket.receive_text()
-        data = data.split(", ")
+        video_id, username = data.split(", ")
 
-        current_user = await services.get_user_by_username(data[1])
+        if not current_user:
+            current_user = await services.get_user_by_username(username)
 
-        count_likes = await set_like(int(data[0]), current_user)
+        count_likes = await set_like(int(video_id), current_user)
         await websocket.send_text(f"{count_likes}")

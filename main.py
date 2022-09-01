@@ -31,6 +31,6 @@ app.include_router(user_router)
 app.include_router(html_video_router)
 app.include_router(html_user_router)
 
+AUTH = ""
 
-print("перепроверить вебсокеты")
 print("вывод сразу всех ошибок валидации")
