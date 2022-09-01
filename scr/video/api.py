@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, File, UploadFile, Depends, BackgroundTasks
+from fastapi import APIRouter, Form, File, UploadFile, Depends, BackgroundTasks, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from config.utils import http404_error_handler
@@ -52,5 +52,9 @@ async def delete_video(back_task: BackgroundTasks, video_id: int, current_user: 
     """Delete video"""
 
     video = await http404_error_handler(class_model=Video, attribute=video_id)
+
+    if current_user != video.user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't do it!")
+
     await services.delete_video_from_database(video=video, back_task=back_task, user_id=current_user.id)
     return {"status": "Successful!"}

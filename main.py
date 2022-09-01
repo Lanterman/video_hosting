@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from config.db import metadata, database, engine
 from scr.user.api import user_router
+from scr.user.auth import auth_router
 from scr.user.html_api import html_user_router
 from scr.video.api import video_router
 from scr.video.html_api import html_video_router
@@ -28,9 +29,8 @@ async def shutdown() -> None:
 
 app.include_router(video_router)
 app.include_router(user_router)
+app.include_router(auth_router)
 app.include_router(html_video_router)
 app.include_router(html_user_router)
 
 AUTH = ""
-
-print("вывод сразу всех ошибок валидации")
