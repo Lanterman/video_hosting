@@ -81,6 +81,13 @@ class UserUpdate(UserBase):
             raise HTTPException(status_code=406, detail="Too small email field! Minimum length 5 characters before @!")
         return value
 
+    @validator("email")
+    def gmail_prefix(cls, value):
+        email = re.split("@", value)
+        if "gmail" in email[1]:
+            raise HTTPException(status_code=406, detail="doesn't support 'gmail' prefix!")
+        return value
+
 
 class UserCreate(UserUpdate):
     """User creation schema - path arguments and fields validation"""

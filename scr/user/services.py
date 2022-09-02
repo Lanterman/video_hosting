@@ -142,3 +142,25 @@ async def follow_or_unfollow(owner: Users, subscriber: Users) -> list:
         await Subscriber.objects.create(owner=owner, subscriber=subscriber)
     subscribers = await get_user_subscribers(username=owner.username)
     return subscribers
+
+
+async def create_google_user(username: str, email: str) -> int:
+    """Create user with Google"""
+
+    google_user = await Users.objects.get_or_none(email=email)
+
+    if not google_user:
+        hashed_password = hash_password(password=get_random_string(15))
+        google_user = await Users.objects.create(
+            username=username, email=email, hashed_password=hashed_password
+        )
+
+    return google_user.id
+
+
+async def google_auth(username: str, email: str) -> Tokens:
+    """Google authenticated"""
+
+    google_user = await create_google_user(username, email)
+    token = await create_user_token(google_user)
+    return token
