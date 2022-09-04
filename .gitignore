@@ -4,3 +4,5 @@ uploaded_files/*
 .idea
 
 video_hosting.db
+
+alembic/versions/*

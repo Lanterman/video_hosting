@@ -1,5 +1,5 @@
 starlette==0.19.1
-pydantic==1.9.1
+pydantic[email]==1.9.1
 uvicorn==0.17.6
 fastapi==0.79.0
 websockets==10.3
@@ -10,6 +10,7 @@ ormar==0.11.2
 SQLAlchemy==1.4.38
 databases==0.6.0
 psycopg2==2.9.3
-aiosqlite==0.17.0
 jinja2==3.1.2
 fastapi-sso==0.6.2
+asyncpg==0.26.0
+alembic==1.8.1

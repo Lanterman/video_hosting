@@ -13,7 +13,7 @@ class Users(ormar.Model):
 
     id: int = ormar.Integer(primary_key=True)
     username: str = ormar.String(index=True, max_length=100, unique=True)
-    phone: int = ormar.String(max_length=14, default=0)
+    phone: str = ormar.String(max_length=14, default="0")
     email: EmailStr = ormar.String(index=True, unique=True, max_length=255)
     hashed_password: str = ormar.String(max_length=300)
     is_activate: bool = ormar.Boolean(default=True)
@@ -37,4 +37,3 @@ class Subscriber(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     owner: int = ormar.ForeignKey(to=Users, ondelete="CASCADE", nullable=False)
     subscriber: int = ormar.ForeignKey(to=Users, ondelete="CASCADE", related_name="subscribers", nullable=False)
-
