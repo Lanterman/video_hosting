@@ -5,4 +5,4 @@ uploaded_files/*
 
 video_hosting.db
 
-alembic/versions/*
+alembic/versions/*.py

@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  postgres:
+  postgres_db:
     image: postgres:14
     ports:
       - "5432:5432"
@@ -17,7 +17,7 @@ services:
     build:
       context: ./
       dockerfile: DockerFile
-    command: uvicorn main:app --workers 1 --host 0.0.0.0 --port 8000
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
     volumes:
       - os_data:/app
     ports:
@@ -27,7 +27,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     depends_on:
-      -   postgres
+      - postgres_db
     container_name: main
 
 
