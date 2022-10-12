@@ -1,8 +1,13 @@
-venv
-__pycache__/
-uploaded_files/*
 .idea
 
-video_hosting.db
+__pycache__/
+
+venv
 
 alembic/versions/*
+!alembic/versions/__init__.py
+
+uploaded_files/*
+!uploaded_files/__init__.py
+
+video_hosting.db
